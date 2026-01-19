@@ -32,9 +32,17 @@ async function run() {
       res.send(result);
     });
 
-    // get vehicle
+    // get all vehicle data
     app.get("/all-vehicles", async (req, res) => {
-      const cursor = vehicleCollection.find({});
+      const cursor = vehicleCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // get fixed latest vehicles data
+    app.get("/latest-vehicles", async (req, res) => {
+      const sortByDate = { createdAt: -1 };
+      const cursor = vehicleCollection.find().sort(sortByDate).limit(6);
       const result = await cursor.toArray();
       res.send(result);
     });
