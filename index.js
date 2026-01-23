@@ -48,6 +48,22 @@ async function run() {
       res.send(result);
     });
 
+    // update vehicle data
+    app.patch("/update-vehicles/:id", async (req, res) => {
+      const { id } = req.params;
+      const objId = new ObjectId(id);
+      const modifiedData = req.body;
+      console.log("server hit", modifiedData);
+      const updatedData = {
+        $set: modifiedData,
+      };
+      const result = await vehicleCollection.updateOne(
+        { _id: objId },
+        updatedData,
+      );
+      res.send({ success: true, result });
+    });
+
     // delete users vehicle
     app.delete("/vehicles/:id", async (req, res) => {
       const { id } = req.params;
