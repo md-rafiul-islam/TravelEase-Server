@@ -62,7 +62,7 @@ async function run() {
         { _id: objId },
         updatedData,
       );
-      res.send({ success: true, result });
+      res.send(result);
     });
 
     // delete users vehicle
