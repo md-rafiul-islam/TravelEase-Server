@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 3000;
@@ -29,6 +29,7 @@ async function run() {
     app.post("/add-vehicle", async (req, res) => {
       const newVehicle = req.body;
       const result = await vehicleCollection.insertOne(newVehicle);
+      // console.log(newVehicle);
       res.send(result);
     });
 
@@ -36,6 +37,25 @@ async function run() {
     app.get("/all-vehicles", async (req, res) => {
       const cursor = vehicleCollection.find();
       const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // get vehicle data by id
+    app.get("/vehicles/:id", async (req, res) => {
+      const { id } = req.params;
+      const objId = new ObjectId(id);
+      const result = await vehicleCollection.findOne({ _id: objId });
+      res.send(result);
+    });
+
+    // users added vehicle
+    app.get("/my-vehicles", async (req, res) => {
+      const email = req.query.email;
+
+      const result = await vehicleCollection
+        .find({ userEmail: email })
+        .toArray();
+
       res.send(result);
     });
 
