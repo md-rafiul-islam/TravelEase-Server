@@ -48,7 +48,17 @@ async function run() {
       res.send(result);
     });
 
-    // users added vehicle
+    // delete users vehicle
+    app.delete("/vehicles/:id", async (req, res) => {
+      const { id } = req.params;
+      const objId = new ObjectId(id);
+      const result = await vehicleCollection.deleteOne({ _id: objId });
+      console.log(req.params);
+      console.log("delete api hited");
+      res.send(result);
+    });
+
+    // user's added vehicle
     app.get("/my-vehicles", async (req, res) => {
       const email = req.query.email;
 
