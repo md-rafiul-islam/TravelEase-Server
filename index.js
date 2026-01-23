@@ -24,6 +24,7 @@ async function run() {
     await client.connect();
     const db = client.db("travelEase");
     const vehicleCollection = db.collection("vehicle");
+    const bookedVehicleCollection = db.collection("bookedVehicle");
 
     // add vehicle
     app.post("/add-vehicle", async (req, res) => {
@@ -90,6 +91,33 @@ async function run() {
       const sortByDate = { createdAt: -1 };
       const cursor = vehicleCollection.find().sort(sortByDate).limit(6);
       const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // vehicle book api by client email and vehicle's data
+    app.post("/book-vehicle", async (req, res) => {
+      const {
+        vehicleName,
+        category,
+        pricePerDay,
+        location,
+        description,
+        coverImage,
+        categories,
+      } = req.body;
+
+      const bookeData = {
+        vehicleName,
+        category,
+        pricePerDay,
+        location,
+        description,
+        coverImage,
+        categories,
+      };
+      bookeData.clientEmail = req.query.email;
+
+      const result = await bookedVehicleCollection.insertOne(bookeData);
       res.send(result);
     });
 
