@@ -121,6 +121,15 @@ async function run() {
       res.send(result);
     });
 
+    // api for finding clients booked car
+    app.get("/mybookings", async (req, res) => {
+      const { email } = req.query;
+      const result = await bookedVehicleCollection
+        .find({ clientEmail: email })
+        .toArray();
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
