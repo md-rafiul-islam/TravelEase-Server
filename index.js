@@ -85,10 +85,17 @@ async function run() {
     });
 
     // update vehicle data
-    app.patch("/update-vehicles/:id", async (req, res) => {
+    app.patch("/update-vehicles/:id", verifyFirebaseToken, async (req, res) => {
+      const { email } = req.query;
+      // console.log(email);
+      if (email != req.token_email) {
+        res.status(403).send({ message: "forbidden access" });
+      }
+
       const { id } = req.params;
       const objId = new ObjectId(id);
       const modifiedData = req.body;
+
       // console.log("server hit", modifiedData);
       const updatedData = {
         $set: modifiedData,
