@@ -57,11 +57,11 @@ async function run() {
     const bookedVehicleCollection = db.collection("bookedVehicle");
 
     // add vehicle
-    app.post("/add-vehicle", async (req, res) => {
-      // const email = req.query.email;
-      // if (email != req.token_email) {
-      //   res.status(403).send({ message: "forbidden access" });
-      // }
+    app.post("/add-vehicle", verifyFirebaseToken, async (req, res) => {
+      const { email } = req.query;
+      if (email != req.token_email) {
+        res.status(403).send({ message: "forbidden access" });
+      }
 
       const newVehicle = req.body;
       const result = await vehicleCollection.insertOne(newVehicle);
@@ -101,8 +101,12 @@ async function run() {
     });
 
     // delete users vehicle
-    app.delete("/vehicles/:id", async (req, res) => {
+    app.delete("/vehicles/:id", verifyFirebaseToken, async (req, res) => {
       const { id } = req.params;
+      const { email } = req.query;
+      if (email != req.token_email) {
+        res.status(403).send({ message: "forbidden access" });
+      }
       const objId = new ObjectId(id);
       const result = await vehicleCollection.deleteOne({ _id: objId });
       // console.log(req.params);
