@@ -1,13 +1,43 @@
 const express = require("express");
 const cors = require("cors");
+const admin = require("firebase-admin");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+const serviceAccount = require("./travelease-firebase-adminsdk.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
 // middleware
 app.use(cors());
 app.use(express.json());
+
+const logger = (req, res, next) => {
+  next();
+};
+
+const verifyFirebaseToken = async (req, res, next) => {
+  if (!req.headers.authorization) {
+    res.status(401).send({ message: "unauthorize access" });
+  }
+  const token = req.headers.authorization.split(" ")[1];
+
+  if (!token) {
+    res.status(401).send({ message: "unauthorize access" });
+  }
+  // verify token
+  try {
+    const userInfo = await admin.auth().verifyIdToken(token);
+    // console.log("token validation", userInfo);
+    req.token_email = userInfo.email;
+    next();
+  } catch (error) {
+    res.status(401).send({ message: "unauthorize access" });
+  }
+};
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.qga6hdn.mongodb.net/?appName=Cluster0`;
 const client = new MongoClient(uri, {
@@ -28,6 +58,11 @@ async function run() {
 
     // add vehicle
     app.post("/add-vehicle", async (req, res) => {
+      // const email = req.query.email;
+      // if (email != req.token_email) {
+      //   res.status(403).send({ message: "forbidden access" });
+      // }
+
       const newVehicle = req.body;
       const result = await vehicleCollection.insertOne(newVehicle);
       // console.log(newVehicle);
@@ -54,7 +89,7 @@ async function run() {
       const { id } = req.params;
       const objId = new ObjectId(id);
       const modifiedData = req.body;
-      console.log("server hit", modifiedData);
+      // console.log("server hit", modifiedData);
       const updatedData = {
         $set: modifiedData,
       };
@@ -70,14 +105,17 @@ async function run() {
       const { id } = req.params;
       const objId = new ObjectId(id);
       const result = await vehicleCollection.deleteOne({ _id: objId });
-      console.log(req.params);
-      console.log("delete api hited");
+      // console.log(req.params);
+      // console.log("delete api hited");
       res.send(result);
     });
 
     // user's added vehicle
-    app.get("/my-vehicles", async (req, res) => {
+    app.get("/my-vehicles", verifyFirebaseToken, async (req, res) => {
       const email = req.query.email;
+      if (email != req.token_email) {
+        res.status(403).send({ message: "forbidden access" });
+      }
 
       const result = await vehicleCollection
         .find({ userEmail: email })
@@ -122,8 +160,11 @@ async function run() {
     });
 
     // api for finding clients booked car
-    app.get("/mybookings", async (req, res) => {
+    app.get("/mybookings", verifyFirebaseToken, async (req, res) => {
       const { email } = req.query;
+      if (email != req.token_email) {
+        res.status(403).send({ message: "forbidden access" });
+      }
       const result = await bookedVehicleCollection
         .find({ clientEmail: email })
         .toArray();
